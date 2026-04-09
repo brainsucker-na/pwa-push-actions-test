@@ -2,6 +2,10 @@
 
 Tiny static website for testing PWA notification actions and inspecting what `event.action` reaches the service worker.
 
+Test yourself:
+
+https://brainsucker-na.github.io/pwa-push-actions-test/
+
 One concrete issue this app helps demonstrate:
 
 - on Chrome Android 146, whether used as an installed PWA or in a regular browser tab, tapping the first visible action button may return the second action id
