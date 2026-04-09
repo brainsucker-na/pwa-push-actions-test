@@ -78,13 +78,10 @@ const elements = {
   copyLogsButton: document.querySelector("#copy-logs-button"),
   clearLogsButton: document.querySelector("#clear-logs-button"),
   lastActionId: document.querySelector("#last-action-id"),
-  lastExpectedAction: document.querySelector("#last-expected-action"),
-  lastVerdict: document.querySelector("#last-verdict"),
   lastActionTitle: document.querySelector("#last-action-title"),
   lastTestId: document.querySelector("#last-test-id"),
   lastNotificationId: document.querySelector("#last-notification-id"),
   lastClickedAt: document.querySelector("#last-clicked-at"),
-  lastExpectedTap: document.querySelector("#last-expected-tap"),
   testCases: document.querySelector("#test-cases"),
   logPanel: document.querySelector("#log-panel"),
   customTitle: document.querySelector("#custom-title"),
@@ -250,41 +247,16 @@ function renderTestCases() {
     const description = document.createElement("p");
     description.textContent = `${testCase.title} | actions: ${formatActions(testCase.actions)}`;
 
-    const actions = document.createElement("div");
-    actions.className = "inline-actions";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Show test";
+    button.addEventListener("click", async () => {
+      await showTestNotification(testCase);
+    });
 
-    for (const trigger of buildPredefinedTriggers(testCase)) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = trigger.className;
-      button.textContent = trigger.label;
-      button.addEventListener("click", async () => {
-        await showTestNotification(testCase, trigger.expectedTap);
-      });
-      actions.appendChild(button);
-    }
-
-    wrapper.append(title, description, actions);
+    wrapper.append(title, description, button);
     elements.testCases.appendChild(wrapper);
   }
-}
-
-function buildPredefinedTriggers(testCase) {
-  if (testCase.actions.length === 0) {
-    return [
-      {
-        label: "Test body",
-        className: "",
-        expectedTap: createExpectedTap(testCase, null),
-      },
-    ];
-  }
-
-  return testCase.actions.map((action, index) => ({
-    label: `Test #${index + 1}`,
-    className: index === 0 ? "" : "secondary",
-    expectedTap: createExpectedTap(testCase, index),
-  }));
 }
 
 function renderLogs() {
@@ -302,33 +274,22 @@ function renderLogs() {
 function renderLastClickResult() {
   if (!state.lastClickResult) {
     elements.lastActionId.textContent = "Waiting for click...";
-    elements.lastExpectedAction.textContent = "-";
-    elements.lastVerdict.textContent = "-";
-    elements.lastVerdict.className = "";
     elements.lastActionTitle.textContent = "No click yet.";
     elements.lastTestId.textContent = "-";
     elements.lastNotificationId.textContent = "-";
     elements.lastClickedAt.textContent = "-";
-    elements.lastExpectedTap.textContent = "-";
     return;
   }
 
   const entry = state.lastClickResult;
   const selectedActionId = entry.selectedActionId || "(empty string)";
   const matchedTitle = entry.selectedActionMeta?.title || "No matching action";
-  const expectedAction = entry.expectedActionId ?? "-";
-  const expectedTap = entry.expectedTap?.description || "No expected tap";
-  const verdict = getVerdictLabel(entry);
 
   elements.lastActionId.textContent = selectedActionId;
-  elements.lastExpectedAction.textContent = expectedAction || "(empty string)";
-  elements.lastVerdict.textContent = verdict.text;
-  elements.lastVerdict.className = verdict.className;
   elements.lastActionTitle.textContent = matchedTitle;
   elements.lastTestId.textContent = entry.testId || "-";
   elements.lastNotificationId.textContent = entry.notificationId || "-";
   elements.lastClickedAt.textContent = entry.receivedAt || entry.timestamp || "-";
-  elements.lastExpectedTap.textContent = expectedTap;
 }
 
 function appendLog(entry) {
@@ -505,7 +466,7 @@ async function updatePwaApplication() {
   }
 }
 
-async function showTestNotification(testCase, expectedTap = null) {
+async function showTestNotification(testCase) {
   if (!("Notification" in window)) {
     appendLog({
       source: "page",
@@ -538,7 +499,7 @@ async function showTestNotification(testCase, expectedTap = null) {
   validateActions(testCase.actions);
 
   const notificationId = createNotificationInstanceId(testCase.id);
-  const payload = buildNotificationPayload(testCase, notificationId, expectedTap);
+  const payload = buildNotificationPayload(testCase, notificationId);
 
   if (registration.active) {
     registration.active.postMessage({
@@ -557,12 +518,11 @@ async function showTestNotification(testCase, expectedTap = null) {
     title: payload.title,
     actions: payload.options.actions,
     notificationData: payload.options.data,
-    expectedTap,
     message: `Test shown: ${testCase.label}.`,
   });
 }
 
-function buildNotificationPayload(testCase, notificationId, expectedTap) {
+function buildNotificationPayload(testCase, notificationId) {
   const expectedActions = testCase.actions.map((item) => ({
     action: item.action,
     title: item.title,
@@ -585,7 +545,6 @@ function buildNotificationPayload(testCase, notificationId, expectedTap) {
         label: testCase.label,
         body: testCase.body,
         expectedActions,
-        expectedTap,
       },
     },
   };
@@ -691,46 +650,4 @@ function formatActions(actions) {
   return actions
     .map((item, index) => `#${index + 1} "${item.title}" -> ${item.action}`)
     .join(", ");
-}
-
-function createExpectedTap(testCase, buttonIndex) {
-  if (buttonIndex === null || buttonIndex === undefined) {
-    return {
-      tapKind: "default",
-      buttonIndex: null,
-      expectedActionId: "",
-      buttonTitle: null,
-      description: "Tap notification body",
-    };
-  }
-
-  const action = testCase.actions[buttonIndex];
-  return {
-    tapKind: "action",
-    buttonIndex,
-    expectedActionId: action.action,
-    buttonTitle: action.title,
-    description: `Tap button #${buttonIndex + 1}`,
-  };
-}
-
-function getVerdictLabel(entry) {
-  if (entry.matchesExpectedActionId === true) {
-    return {
-      text: "MATCH",
-      className: "status-match",
-    };
-  }
-
-  if (entry.matchesExpectedActionId === false) {
-    return {
-      text: "MISMATCH",
-      className: "status-mismatch",
-    };
-  }
-
-  return {
-    text: "No expectation",
-    className: "",
-  };
 }

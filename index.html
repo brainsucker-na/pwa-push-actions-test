@@ -291,7 +291,7 @@
         </p>
         <p class="hint">
           On Android: install the PWA, allow notifications, run a test, then tap the same button in
-          the notification. <code>MISMATCH</code> means the bug was reproduced.
+          the notification. Then check which <code>event.action</code> came back.
         </p>
         <p class="hint">
           Repo:
@@ -360,20 +360,12 @@
       <section class="panel">
         <h2>Last Click Result</h2>
         <p class="hint">
-          Expected action id vs actual <code>event.action</code>.
+          Last value received from <code>notificationclick</code>.
         </p>
         <div class="result-grid">
           <div class="status-item">
             <strong>Selected Action</strong>
             <code id="last-action-id">Waiting for click...</code>
-          </div>
-          <div class="status-item">
-            <strong>Expected Action</strong>
-            <code id="last-expected-action">-</code>
-          </div>
-          <div class="status-item">
-            <strong>Verdict</strong>
-            <span id="last-verdict">-</span>
           </div>
           <div class="status-item">
             <strong>Matched Title</strong>
@@ -391,17 +383,13 @@
             <strong>Clicked At</strong>
             <span id="last-clicked-at">-</span>
           </div>
-          <div class="status-item">
-            <strong>Expected Tap</strong>
-            <span id="last-expected-tap">-</span>
-          </div>
         </div>
       </section>
 
       <section class="panel">
         <h2>Predefined Test Cases</h2>
         <p class="hint">
-          Start a test, then tap that same button in the notification.
+          Show a notification, then tap one of its action buttons on Android.
         </p>
         <div id="test-cases" class="case-list"></div>
       </section>

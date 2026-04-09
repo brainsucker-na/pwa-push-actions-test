@@ -50,8 +50,8 @@ async function showLocalTestNotification(notification) {
 // ============================================================================
 // NOTIFICATION CLICK TEST ENTRY
 // This is the fastest place to debug Android action handling.
-// The point of the test is to trust only event.action, then compare it against
-// duplicated expectedActions metadata stored in notification.data.
+// The point of the test is to trust only event.action and log exactly what
+// Android Chrome sends back for the tapped notification action.
 // If Chrome reports the wrong action, or reports an empty string, inspect here.
 // ============================================================================
 
@@ -65,20 +65,13 @@ async function handleNotificationClick(event) {
   const expectedActions = Array.isArray(notificationData.expectedActions)
     ? notificationData.expectedActions
     : [];
-  const expectedTap = notificationData.expectedTap || null;
   const selectedActionId = event.action || "";
   const selectedActionMeta = expectedActions.find((item) => item.action === selectedActionId) || null;
-  const expectedActionId = expectedTap ? expectedTap.expectedActionId : null;
-  const matchesExpectedActionId =
-    typeof expectedActionId === "string" ? selectedActionId === expectedActionId : null;
 
   const entry = {
     timestamp: new Date().toISOString(),
     selectedActionId,
     selectedActionMeta,
-    expectedTap,
-    expectedActionId,
-    matchesExpectedActionId,
     testId: notificationData.testId || "unknown_test",
     notificationId: notificationData.notificationId || "unknown_notification",
     createdAt: notificationData.createdAt || null,

@@ -39,25 +39,8 @@ The app uses only local notifications. There is no backend, no push server, no F
 - Sends click results from the service worker back to the page with `client.postMessage(...)`
 - Shows logs on the page
 - Lets you copy or clear logs
-- Compares the expected action id for the button you chose to test against the actual `event.action`
-- Shows a visible `MATCH` or `MISMATCH` result in the UI
+- Shows the last `event.action` returned by the service worker in the UI
 - Includes an `Update PWA` button to refresh the installed app from the site
-
-## Why the UI asks which button you are testing
-
-The browser only gives the service worker `event.action`. It does not directly tell the page which visible button label the user intended to tap.
-
-To make the bug obvious, each predefined test case has launch buttons such as:
-
-- `Show, tap button #1`
-- `Show, tap button #2`
-
-When you start a test this way, the app stores the expected action id for that button inside `notification.data`. After the click comes back from the service worker, the page compares:
-
-- expected action id
-- actual `event.action`
-
-If they differ, the UI shows `MISMATCH`, which means the bug was reproduced.
 
 ## Update button
 
@@ -109,25 +92,22 @@ Service workers and notifications require a secure context.
 
 1. Open the site in Chrome on Android.
 2. Install it as a PWA from Chrome.
-3. Tap `Register Service Worker`.
-4. Tap `Request Notification Permission` and allow notifications.
-5. Use one of the predefined test buttons such as `Show, tap button #1`.
-6. Tap that button in the notification on the device.
-7. Check the `Last Click Result` panel:
-   - `MATCH` means the returned `event.action` matched the intended button
-   - `MISMATCH` means the returned `event.action` did not match the intended button
+3. Tap `Register SW`.
+4. Tap `Allow Notifications`.
+5. Tap `Show test` on one of the predefined cases.
+6. Tap an action button in the notification on the device.
+7. Check the `Last Click Result` panel for the returned `event.action`.
 8. Inspect the log panel for the full service worker payload.
 
 ## Expected demo outcome
 
-- On Chrome for Windows: the predefined button tests should normally show `MATCH`.
-- On the affected installed Android Chrome PWA: tapping the first visible action button may show `MISMATCH` because the returned id belongs to the second action.
+- On Chrome for Windows: the returned `event.action` should normally match the tapped button.
+- On the affected installed Android Chrome PWA: tapping the first visible action button may return the second action id instead.
 
 ## Important implementation notes
 
 - Notification routing is based only on `event.action`.
 - Expected action metadata is duplicated in `notification.data.expectedActions`.
-- The expected button for each test run is duplicated in `notification.data.expectedTap`.
 - Every notification instance gets a unique `notificationId`.
 - Every log entry includes timestamps.
 - Offline support is minimal and intended only to satisfy basic installability and keep the app shell available.
