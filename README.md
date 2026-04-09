@@ -26,6 +26,7 @@ The app uses only local notifications. There is no backend, no push server, no F
 ## Files
 
 - `index.html`
+- `styles.css`
 - `app.js`
 - `sw.js`
 - `manifest.json`

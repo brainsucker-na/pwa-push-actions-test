@@ -2,6 +2,7 @@ const CACHE_NAME = "pwa-action-tester-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./styles.css",
   "./app.js",
   "./manifest.json",
   "./icons/icon-192.png",

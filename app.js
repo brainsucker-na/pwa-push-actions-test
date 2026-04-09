@@ -326,10 +326,14 @@ function showClickToast(entry) {
   elements.toastActionId.textContent = selectedActionId;
   elements.toastActionTitle.textContent = matchedTitle;
   elements.toastTestId.textContent = entry.testId || "-";
+  elements.clickToast.classList.remove("flash");
   elements.clickToast.hidden = false;
+  void elements.clickToast.offsetWidth;
+  elements.clickToast.classList.add("flash");
 }
 
 function hideClickToast() {
+  elements.clickToast.classList.remove("flash");
   elements.clickToast.hidden = true;
 }
 
