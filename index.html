@@ -219,6 +219,10 @@
         line-height: 1.45;
       }
 
+      .hint a {
+        color: var(--accent-strong);
+      }
+
       .log-toolbar {
         display: flex;
         justify-content: space-between;
@@ -288,6 +292,12 @@
         <p class="hint">
           On Android: install the PWA, allow notifications, run a test, then tap the same button in
           the notification. <code>MISMATCH</code> means the bug was reproduced.
+        </p>
+        <p class="hint">
+          Repo:
+          <a href="https://github.com/brainsucker-na/pwa-push-actions-test" target="_blank" rel="noreferrer">
+            github.com/brainsucker-na/pwa-push-actions-test
+          </a>
         </p>
         <div class="actions">
           <button id="register-sw-button" type="button">Register SW</button>
