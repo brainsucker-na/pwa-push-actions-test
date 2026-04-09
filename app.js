@@ -5,30 +5,30 @@ const CUSTOM_TEST_ID = "custom_actions";
 const predefinedTests = [
   {
     id: "two_actions",
-    label: "Two actions: first_action / second_action",
-    title: "Two action buttons",
-    body: "Tap the first or second action button.",
+    label: "first_action / second_action",
+    title: "Two actions",
+    body: "Tap button 1 or 2.",
     actions: [
-      { action: "first_action", title: "First action" },
-      { action: "second_action", title: "Second action" },
+      { action: "first_action", title: "First" },
+      { action: "second_action", title: "Second" },
     ],
   },
   {
     id: "two_actions_reversed_titles",
-    label: "Same ids, reversed titles",
-    title: "Reversed button titles",
-    body: "The action ids stay the same while titles swap positions.",
+    label: "Same ids, swapped titles",
+    title: "Swapped titles",
+    body: "Same ids, swapped labels.",
     actions: [
-      { action: "first_action", title: "Second label" },
-      { action: "second_action", title: "First label" },
+      { action: "first_action", title: "Second" },
+      { action: "second_action", title: "First" },
     ],
   },
   {
     id: "one_action_only",
-    label: "One action only",
-    title: "Single action button",
-    body: "Only one action should be available.",
-    actions: [{ action: "only_action", title: "Only action" }],
+    label: "One action",
+    title: "Single action",
+    body: "Only one button.",
+    actions: [{ action: "only_action", title: "Only" }],
   },
   {
     id: "no_actions",
@@ -39,22 +39,22 @@ const predefinedTests = [
   },
   {
     id: "same_titles_different_ids",
-    label: "Same titles, different ids",
-    title: "Same titles, unique ids",
-    body: "Both buttons share a title but use different action ids.",
+    label: "Same title, different ids",
+    title: "Same titles",
+    body: "Same title, different ids.",
     actions: [
-      { action: "same_title_a", title: "Choose" },
-      { action: "same_title_b", title: "Choose" },
+      { action: "same_title_a", title: "Pick" },
+      { action: "same_title_b", title: "Pick" },
     ],
   },
   {
     id: "trip_actions",
     label: "accept_trip / decline_trip",
     title: "Trip request",
-    body: "Simulate a real-world action pair.",
+    body: "Accept or decline.",
     actions: [
-      { action: "accept_trip", title: "Accept trip" },
-      { action: "decline_trip", title: "Decline trip" },
+      { action: "accept_trip", title: "Accept" },
+      { action: "decline_trip", title: "Decline" },
     ],
   },
 ];
@@ -72,16 +72,19 @@ const elements = {
   userAgent: document.querySelector("#user-agent"),
   registerButton: document.querySelector("#register-sw-button"),
   permissionButton: document.querySelector("#permission-button"),
+  updatePwaButton: document.querySelector("#update-pwa-button"),
   refreshStatusButton: document.querySelector("#refresh-status-button"),
   customNotificationButton: document.querySelector("#custom-notification-button"),
   copyLogsButton: document.querySelector("#copy-logs-button"),
   clearLogsButton: document.querySelector("#clear-logs-button"),
   lastActionId: document.querySelector("#last-action-id"),
+  lastExpectedAction: document.querySelector("#last-expected-action"),
+  lastVerdict: document.querySelector("#last-verdict"),
   lastActionTitle: document.querySelector("#last-action-title"),
   lastTestId: document.querySelector("#last-test-id"),
   lastNotificationId: document.querySelector("#last-notification-id"),
   lastClickedAt: document.querySelector("#last-clicked-at"),
-  lastClickPath: document.querySelector("#last-click-path"),
+  lastExpectedTap: document.querySelector("#last-expected-tap"),
   testCases: document.querySelector("#test-cases"),
   logPanel: document.querySelector("#log-panel"),
   customTitle: document.querySelector("#custom-title"),
@@ -115,7 +118,7 @@ function bindEvents() {
         source: "page",
         eventType: "permission-request",
         level: "error",
-        message: "Notifications are not supported in this browser.",
+        message: "Notifications are not supported.",
       });
       updateEnvironmentInfo();
       return;
@@ -126,7 +129,7 @@ function bindEvents() {
       source: "page",
       eventType: "permission-result",
       permission: result,
-      message: `Notification permission is ${result}.`,
+      message: `Permission: ${result}.`,
     });
     updateEnvironmentInfo();
   });
@@ -134,6 +137,10 @@ function bindEvents() {
   elements.refreshStatusButton.addEventListener("click", async () => {
     updateEnvironmentInfo();
     await refreshServiceWorkerStatus();
+  });
+
+  elements.updatePwaButton.addEventListener("click", async () => {
+    await updatePwaApplication();
   });
 
   elements.customNotificationButton.addEventListener("click", async () => {
@@ -152,9 +159,9 @@ function bindEvents() {
       validateActions(normalizedActions);
       await showTestNotification({
         id: CUSTOM_TEST_ID,
-        label: "Custom actions",
-        title: elements.customTitle.value.trim() || "Custom notification test",
-        body: elements.customBody.value.trim() || "Tap an action button and inspect the log.",
+        label: "Custom test",
+        title: elements.customTitle.value.trim() || "Custom test",
+        body: elements.customBody.value.trim() || "Tap a button and check the result.",
         actions: normalizedActions,
       });
     } catch (error) {
@@ -175,7 +182,7 @@ function bindEvents() {
       appendLog({
         source: "page",
         eventType: "copy-logs",
-        message: `Copied ${state.logs.length} log entries to the clipboard.`,
+        message: `Copied ${state.logs.length} logs.`,
       });
     } catch (error) {
       appendLog({
@@ -189,12 +196,14 @@ function bindEvents() {
 
   elements.clearLogsButton.addEventListener("click", () => {
     state.logs = [];
+    state.lastClickResult = null;
     persistLogs();
+    renderLastClickResult();
     renderLogs();
     appendLog({
       source: "page",
       eventType: "clear-logs",
-      message: "Logs were cleared.",
+      message: "Logs cleared.",
     });
   });
 
@@ -241,16 +250,41 @@ function renderTestCases() {
     const description = document.createElement("p");
     description.textContent = `${testCase.title} | actions: ${formatActions(testCase.actions)}`;
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Show notification";
-    button.addEventListener("click", async () => {
-      await showTestNotification(testCase);
-    });
+    const actions = document.createElement("div");
+    actions.className = "inline-actions";
 
-    wrapper.append(title, description, button);
+    for (const trigger of buildPredefinedTriggers(testCase)) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = trigger.className;
+      button.textContent = trigger.label;
+      button.addEventListener("click", async () => {
+        await showTestNotification(testCase, trigger.expectedTap);
+      });
+      actions.appendChild(button);
+    }
+
+    wrapper.append(title, description, actions);
     elements.testCases.appendChild(wrapper);
   }
+}
+
+function buildPredefinedTriggers(testCase) {
+  if (testCase.actions.length === 0) {
+    return [
+      {
+        label: "Test body",
+        className: "",
+        expectedTap: createExpectedTap(testCase, null),
+      },
+    ];
+  }
+
+  return testCase.actions.map((action, index) => ({
+    label: `Test #${index + 1}`,
+    className: index === 0 ? "" : "secondary",
+    expectedTap: createExpectedTap(testCase, index),
+  }));
 }
 
 function renderLogs() {
@@ -268,25 +302,33 @@ function renderLogs() {
 function renderLastClickResult() {
   if (!state.lastClickResult) {
     elements.lastActionId.textContent = "Waiting for click...";
-    elements.lastActionTitle.textContent = "No click received yet.";
+    elements.lastExpectedAction.textContent = "-";
+    elements.lastVerdict.textContent = "-";
+    elements.lastVerdict.className = "";
+    elements.lastActionTitle.textContent = "No click yet.";
     elements.lastTestId.textContent = "-";
     elements.lastNotificationId.textContent = "-";
     elements.lastClickedAt.textContent = "-";
-    elements.lastClickPath.textContent = "-";
+    elements.lastExpectedTap.textContent = "-";
     return;
   }
 
   const entry = state.lastClickResult;
   const selectedActionId = entry.selectedActionId || "(empty string)";
-  const matchedTitle = entry.selectedActionMeta?.title || "No matching action metadata";
-  const clickPath = entry.selectedActionId ? "Action button tap" : "Notification body tap / default";
+  const matchedTitle = entry.selectedActionMeta?.title || "No matching action";
+  const expectedAction = entry.expectedActionId ?? "-";
+  const expectedTap = entry.expectedTap?.description || "No expected tap";
+  const verdict = getVerdictLabel(entry);
 
   elements.lastActionId.textContent = selectedActionId;
+  elements.lastExpectedAction.textContent = expectedAction || "(empty string)";
+  elements.lastVerdict.textContent = verdict.text;
+  elements.lastVerdict.className = verdict.className;
   elements.lastActionTitle.textContent = matchedTitle;
   elements.lastTestId.textContent = entry.testId || "-";
   elements.lastNotificationId.textContent = entry.notificationId || "-";
   elements.lastClickedAt.textContent = entry.receivedAt || entry.timestamp || "-";
-  elements.lastClickPath.textContent = clickPath;
+  elements.lastExpectedTap.textContent = expectedTap;
 }
 
 function appendLog(entry) {
@@ -350,7 +392,7 @@ async function registerServiceWorker(userInitiated = false) {
       source: "page",
       eventType: "service-worker-unsupported",
       level: "error",
-      message: "Service workers are not supported in this browser.",
+      message: "Service workers are not supported.",
     });
     return null;
   }
@@ -363,7 +405,7 @@ async function registerServiceWorker(userInitiated = false) {
       source: "page",
       eventType: userInitiated ? "service-worker-register-manual" : "service-worker-register-auto",
       scope: registration.scope,
-      message: `Service worker registered with scope ${registration.scope}.`,
+      message: "Service worker registered.",
     });
 
     return registration;
@@ -372,7 +414,7 @@ async function registerServiceWorker(userInitiated = false) {
       source: "page",
       eventType: "service-worker-register-error",
       level: "error",
-      message: `Service worker registration failed: ${error.message}`,
+      message: `SW registration failed: ${error.message}`,
     });
     return null;
   }
@@ -397,14 +439,80 @@ async function refreshServiceWorkerStatus() {
     : '<span class="status-bad">Not active</span>';
 }
 
-async function showTestNotification(testCase) {
+async function updatePwaApplication() {
+  if (!("serviceWorker" in navigator)) {
+    appendLog({
+      source: "page",
+      eventType: "update-pwa-error",
+      level: "error",
+      message: "Service workers are not supported.",
+    });
+    return;
+  }
+
+  appendLog({
+    source: "page",
+    eventType: "update-pwa-start",
+    message: "Updating app...",
+  });
+
+  let registration = state.registration;
+  if (!registration) {
+    registration = await navigator.serviceWorker.getRegistration();
+  }
+  if (!registration) {
+    registration = await navigator.serviceWorker.ready;
+  }
+  state.registration = registration;
+
+  try {
+    await registration.update();
+    registration = (await navigator.serviceWorker.getRegistration()) || registration;
+
+    if (registration.installing) {
+      await waitForWorkerState(registration.installing, "installed");
+      registration = (await navigator.serviceWorker.getRegistration()) || registration;
+    }
+
+    if (registration.waiting) {
+      sendMessageToWorker(registration.waiting, { type: "skip-waiting" });
+      await waitForControllerChange(2500);
+      registration = (await navigator.serviceWorker.getRegistration()) || registration;
+    }
+
+    const activeWorker = registration.active || navigator.serviceWorker.controller;
+    if (!activeWorker) {
+      throw new Error("No active service worker is available to refresh cached files.");
+    }
+
+    const response = await sendMessageToWorker(activeWorker, { type: "refresh-app-shell" });
+
+    appendLog({
+      source: "page",
+      eventType: "update-pwa-success",
+      cacheRefreshedAt: response?.refreshedAt || null,
+      message: "App updated. Reloading...",
+    });
+
+    window.location.reload();
+  } catch (error) {
+    appendLog({
+      source: "page",
+      eventType: "update-pwa-error",
+      level: "error",
+      message: `Update failed: ${error.message}`,
+    });
+  }
+}
+
+async function showTestNotification(testCase, expectedTap = null) {
   if (!("Notification" in window)) {
     appendLog({
       source: "page",
       eventType: "show-notification-error",
       level: "error",
       testId: testCase.id,
-      message: "Notifications are not supported in this browser.",
+      message: "Notifications are not supported.",
     });
     return;
   }
@@ -415,7 +523,7 @@ async function showTestNotification(testCase) {
       eventType: "show-notification-error",
       level: "error",
       testId: testCase.id,
-      message: `Notification permission must be granted before showing "${testCase.label}".`,
+      message: "Allow notifications first.",
     });
     updateEnvironmentInfo();
     return;
@@ -430,7 +538,7 @@ async function showTestNotification(testCase) {
   validateActions(testCase.actions);
 
   const notificationId = createNotificationInstanceId(testCase.id);
-  const payload = buildNotificationPayload(testCase, notificationId);
+  const payload = buildNotificationPayload(testCase, notificationId, expectedTap);
 
   if (registration.active) {
     registration.active.postMessage({
@@ -449,11 +557,12 @@ async function showTestNotification(testCase) {
     title: payload.title,
     actions: payload.options.actions,
     notificationData: payload.options.data,
-    message: `Displayed "${testCase.label}" locally with ${payload.options.actions.length} action(s).`,
+    expectedTap,
+    message: `Test shown: ${testCase.label}.`,
   });
 }
 
-function buildNotificationPayload(testCase, notificationId) {
+function buildNotificationPayload(testCase, notificationId, expectedTap) {
   const expectedActions = testCase.actions.map((item) => ({
     action: item.action,
     title: item.title,
@@ -476,6 +585,7 @@ function buildNotificationPayload(testCase, notificationId) {
         label: testCase.label,
         body: testCase.body,
         expectedActions,
+        expectedTap,
       },
     },
   };
@@ -484,6 +594,77 @@ function buildNotificationPayload(testCase, notificationId) {
 function createNotificationInstanceId(testId) {
   const randomPart = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
   return `${testId}-${Date.now()}-${randomPart}`;
+}
+
+function sendMessageToWorker(target, payload) {
+  return new Promise((resolve, reject) => {
+    if (!target || typeof target.postMessage !== "function") {
+      reject(new Error("The target service worker cannot receive messages."));
+      return;
+    }
+
+    const channel = new MessageChannel();
+    channel.port1.onmessage = (event) => {
+      const response = event.data || {};
+      if (response.ok === false) {
+        reject(new Error(response.error || "Service worker command failed."));
+        return;
+      }
+      resolve(response);
+    };
+
+    target.postMessage(payload, [channel.port2]);
+  });
+}
+
+function waitForWorkerState(worker, expectedState) {
+  return new Promise((resolve, reject) => {
+    if (!worker) {
+      reject(new Error("No service worker is available to watch."));
+      return;
+    }
+
+    if (worker.state === expectedState) {
+      resolve(worker);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      worker.removeEventListener("statechange", handleStateChange);
+      reject(new Error(`Timed out waiting for service worker state "${expectedState}".`));
+    }, 4000);
+
+    function handleStateChange() {
+      if (worker.state === expectedState) {
+        clearTimeout(timeoutId);
+        worker.removeEventListener("statechange", handleStateChange);
+        resolve(worker);
+      } else if (worker.state === "redundant") {
+        clearTimeout(timeoutId);
+        worker.removeEventListener("statechange", handleStateChange);
+        reject(new Error("Service worker became redundant during update."));
+      }
+    }
+
+    worker.addEventListener("statechange", handleStateChange);
+  });
+}
+
+function waitForControllerChange(timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+      reject(new Error("Timed out waiting for the new service worker to take control."));
+    }, timeoutMs);
+
+    function handleControllerChange() {
+      clearTimeout(timeoutId);
+      navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+      resolve();
+    }
+
+    navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
+  });
 }
 
 function validateActions(actions) {
@@ -507,5 +688,49 @@ function formatActions(actions) {
     return "none";
   }
 
-  return actions.map((item) => `${item.action} -> ${item.title}`).join(", ");
+  return actions
+    .map((item, index) => `#${index + 1} "${item.title}" -> ${item.action}`)
+    .join(", ");
+}
+
+function createExpectedTap(testCase, buttonIndex) {
+  if (buttonIndex === null || buttonIndex === undefined) {
+    return {
+      tapKind: "default",
+      buttonIndex: null,
+      expectedActionId: "",
+      buttonTitle: null,
+      description: "Tap notification body",
+    };
+  }
+
+  const action = testCase.actions[buttonIndex];
+  return {
+    tapKind: "action",
+    buttonIndex,
+    expectedActionId: action.action,
+    buttonTitle: action.title,
+    description: `Tap button #${buttonIndex + 1}`,
+  };
+}
+
+function getVerdictLabel(entry) {
+  if (entry.matchesExpectedActionId === true) {
+    return {
+      text: "MATCH",
+      className: "status-match",
+    };
+  }
+
+  if (entry.matchesExpectedActionId === false) {
+    return {
+      text: "MISMATCH",
+      className: "status-mismatch",
+    };
+  }
+
+  return {
+    text: "No expectation",
+    className: "",
+  };
 }

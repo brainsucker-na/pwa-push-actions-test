@@ -19,11 +19,24 @@ const APP_SHELL = [
 self.addEventListener("message", (event) => {
   const payload = event.data;
 
-  if (!payload || payload.type !== "show-test-notification") {
+  if (!payload) {
     return;
   }
 
-  event.waitUntil(showLocalTestNotification(payload.notification));
+  if (payload.type === "show-test-notification") {
+    event.waitUntil(showLocalTestNotification(payload.notification));
+    return;
+  }
+
+  if (payload.type === "refresh-app-shell") {
+    event.waitUntil(refreshAppShell(event));
+    return;
+  }
+
+  if (payload.type === "skip-waiting") {
+    self.skipWaiting();
+    replyToMessage(event, { ok: true });
+  }
 });
 
 async function showLocalTestNotification(notification) {
@@ -52,13 +65,20 @@ async function handleNotificationClick(event) {
   const expectedActions = Array.isArray(notificationData.expectedActions)
     ? notificationData.expectedActions
     : [];
+  const expectedTap = notificationData.expectedTap || null;
   const selectedActionId = event.action || "";
   const selectedActionMeta = expectedActions.find((item) => item.action === selectedActionId) || null;
+  const expectedActionId = expectedTap ? expectedTap.expectedActionId : null;
+  const matchesExpectedActionId =
+    typeof expectedActionId === "string" ? selectedActionId === expectedActionId : null;
 
   const entry = {
     timestamp: new Date().toISOString(),
     selectedActionId,
     selectedActionMeta,
+    expectedTap,
+    expectedActionId,
+    matchesExpectedActionId,
     testId: notificationData.testId || "unknown_test",
     notificationId: notificationData.notificationId || "unknown_notification",
     createdAt: notificationData.createdAt || null,
@@ -175,6 +195,30 @@ async function postEntryToClients(entry) {
   );
 }
 
+async function refreshAppShell(event) {
+  try {
+    await caches.delete(CACHE_NAME);
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_SHELL);
+    replyToMessage(event, {
+      ok: true,
+      refreshedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    replyToMessage(event, {
+      ok: false,
+      error: error.message,
+    });
+  }
+}
+
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function replyToMessage(event, payload) {
+  const replyPort = event.ports && event.ports[0];
+  if (replyPort) {
+    replyPort.postMessage(payload);
+  }
 }

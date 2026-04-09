@@ -144,6 +144,9 @@
         font: inherit;
         font-weight: 600;
         cursor: pointer;
+        white-space: normal;
+        line-height: 1.2;
+        text-align: center;
       }
 
       button:hover {
@@ -245,6 +248,16 @@
         color: var(--danger);
       }
 
+      .status-match {
+        color: var(--success);
+        font-weight: 700;
+      }
+
+      .status-mismatch {
+        color: var(--danger);
+        font-weight: 700;
+      }
+
       @media (max-width: 640px) {
         main {
           width: min(100% - 20px, 980px);
@@ -269,14 +282,18 @@
       <section class="hero stack">
         <h1>PWA Notification Action Tester</h1>
         <p>
-          This tiny installable PWA triggers local notifications with configurable action buttons so
-          you can inspect what Android Chrome sends as <code>event.action</code> inside the service
-          worker.
+          This site reproduces an Android Chrome PWA bug: tap button 1 in a notification, but the
+          service worker will receive button 2 as <code>event.action</code>.
+        </p>
+        <p class="hint">
+          On Android: install the PWA, allow notifications, run a test, then tap the same button in
+          the notification. <code>MISMATCH</code> means the bug was reproduced.
         </p>
         <div class="actions">
-          <button id="register-sw-button" type="button">Register Service Worker</button>
-          <button id="permission-button" type="button">Request Notification Permission</button>
-          <button id="refresh-status-button" class="ghost" type="button">Refresh Status</button>
+          <button id="register-sw-button" type="button">Register SW</button>
+          <button id="permission-button" type="button">Allow Notifications</button>
+          <button id="update-pwa-button" class="secondary" type="button">Update PWA</button>
+          <button id="refresh-status-button" class="ghost" type="button">Refresh</button>
         </div>
       </section>
 
@@ -321,11 +338,11 @@
 ]</textarea>
           </label>
           <p class="hint">
-            Actions must be valid JSON with <code>action</code> and <code>title</code>. The service
-            worker routes only by <code>event.action</code>.
+            JSON with <code>action</code> and <code>title</code>. Matching uses only
+            <code>event.action</code>.
           </p>
           <div class="inline-actions">
-            <button id="custom-notification-button" type="button">Show Custom Notification</button>
+            <button id="custom-notification-button" type="button">Show Custom Test</button>
           </div>
         </article>
       </section>
@@ -333,13 +350,20 @@
       <section class="panel">
         <h2>Last Click Result</h2>
         <p class="hint">
-          This updates from the most recent <code>notificationclick</code> message so you can see
-          the selected action without opening the full log.
+          Expected action id vs actual <code>event.action</code>.
         </p>
         <div class="result-grid">
           <div class="status-item">
             <strong>Selected Action</strong>
             <code id="last-action-id">Waiting for click...</code>
+          </div>
+          <div class="status-item">
+            <strong>Expected Action</strong>
+            <code id="last-expected-action">-</code>
+          </div>
+          <div class="status-item">
+            <strong>Verdict</strong>
+            <span id="last-verdict">-</span>
           </div>
           <div class="status-item">
             <strong>Matched Title</strong>
@@ -358,14 +382,17 @@
             <span id="last-clicked-at">-</span>
           </div>
           <div class="status-item">
-            <strong>Click Path</strong>
-            <span id="last-click-path">-</span>
+            <strong>Expected Tap</strong>
+            <span id="last-expected-tap">-</span>
           </div>
         </div>
       </section>
 
       <section class="panel">
         <h2>Predefined Test Cases</h2>
+        <p class="hint">
+          Start a test, then tap that same button in the notification.
+        </p>
         <div id="test-cases" class="case-list"></div>
       </section>
 
@@ -373,8 +400,7 @@
         <h2>Log Panel</h2>
         <div class="log-toolbar">
           <p class="hint">
-            The page records local actions, notification payloads, and click results posted back
-            from the service worker.
+            Full logs from the page and service worker.
           </p>
           <div class="inline-actions">
             <button id="copy-logs-button" class="secondary" type="button">Copy Logs</button>
