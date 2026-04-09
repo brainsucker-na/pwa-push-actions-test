@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <title>PWA Notification Action Tester</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --surface: #ffffff;
+        --surface-alt: #e8eef8;
+        --border: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #2563eb;
+        --accent-strong: #1d4ed8;
+        --success: #15803d;
+        --warning: #b45309;
+        --danger: #b91c1c;
+        --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(37, 99, 235, 0.16), transparent 32%),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      main {
+        width: min(980px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 48px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .hero {
+        padding: 24px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(232, 238, 248, 0.96));
+        box-shadow: var(--shadow);
+      }
+
+      .hero p {
+        margin-top: 10px;
+        color: var(--muted);
+        max-width: 72ch;
+        line-height: 1.5;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .panel h2,
+      .panel h3 {
+        font-size: 1rem;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .status-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .status-item {
+        padding: 12px;
+        border-radius: 14px;
+        background: var(--surface-alt);
+        border: 1px solid rgba(148, 163, 184, 0.45);
+      }
+
+      .status-item strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.86rem;
+      }
+
+      .status-item span,
+      .status-item code {
+        font-size: 0.95rem;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .status-item code {
+        display: inline-block;
+      }
+
+      .actions,
+      .inline-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        padding: 11px 16px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--accent-strong);
+      }
+
+      button.secondary {
+        background: #334155;
+      }
+
+      button.ghost {
+        background: #e2e8f0;
+        color: var(--text);
+      }
+
+      button.warn {
+        background: var(--warning);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+      }
+
+      .case-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .case {
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 16px;
+        padding: 14px;
+        background: #fbfdff;
+      }
+
+      .case p {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.92rem;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font: inherit;
+        color: var(--text);
+      }
+
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.87rem;
+        line-height: 1.45;
+      }
+
+      .log-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      #log-panel {
+        margin-top: 12px;
+        min-height: 280px;
+        max-height: 480px;
+        overflow: auto;
+        border-radius: 16px;
+        padding: 14px;
+        background: #0f172a;
+        color: #dbeafe;
+        font: 0.84rem/1.5 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        white-space: pre-wrap;
+      }
+
+      .status-ok {
+        color: var(--success);
+      }
+
+      .status-bad {
+        color: var(--danger);
+      }
+
+      @media (max-width: 640px) {
+        main {
+          width: min(100% - 20px, 980px);
+          padding-top: 18px;
+        }
+
+        .hero,
+        .panel {
+          padding: 16px;
+          border-radius: 18px;
+        }
+
+        .log-toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero stack">
+        <h1>PWA Notification Action Tester</h1>
+        <p>
+          This tiny installable PWA triggers local notifications with configurable action buttons so
+          you can inspect what Android Chrome sends as <code>event.action</code> inside the service
+          worker.
+        </p>
+        <div class="actions">
+          <button id="register-sw-button" type="button">Register Service Worker</button>
+          <button id="permission-button" type="button">Request Notification Permission</button>
+          <button id="refresh-status-button" class="ghost" type="button">Refresh Status</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Environment</h2>
+          <div class="status-list">
+            <div class="status-item">
+              <strong>Standalone / Installed</strong>
+              <span id="display-mode">Unknown</span>
+            </div>
+            <div class="status-item">
+              <strong>Notification Permission</strong>
+              <span id="permission-status">Unknown</span>
+            </div>
+            <div class="status-item">
+              <strong>Service Worker</strong>
+              <span id="service-worker-status">Unknown</span>
+            </div>
+            <div class="status-item">
+              <strong>User Agent</strong>
+              <span id="user-agent">Unknown</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel stack">
+          <h2>Custom Notification</h2>
+          <label for="custom-title">
+            Title
+            <input id="custom-title" type="text" value="Custom notification test">
+          </label>
+          <label for="custom-body">
+            Body
+            <input id="custom-body" type="text" value="Tap an action button and inspect the log.">
+          </label>
+          <label for="custom-actions">
+            Actions JSON
+            <textarea id="custom-actions">[
+  { "action": "alpha", "title": "Alpha" },
+  { "action": "beta", "title": "Beta" }
+]</textarea>
+          </label>
+          <p class="hint">
+            Actions must be valid JSON with <code>action</code> and <code>title</code>. The service
+            worker routes only by <code>event.action</code>.
+          </p>
+          <div class="inline-actions">
+            <button id="custom-notification-button" type="button">Show Custom Notification</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Last Click Result</h2>
+        <p class="hint">
+          This updates from the most recent <code>notificationclick</code> message so you can see
+          the selected action without opening the full log.
+        </p>
+        <div class="result-grid">
+          <div class="status-item">
+            <strong>Selected Action</strong>
+            <code id="last-action-id">Waiting for click...</code>
+          </div>
+          <div class="status-item">
+            <strong>Matched Title</strong>
+            <span id="last-action-title">No click received yet.</span>
+          </div>
+          <div class="status-item">
+            <strong>Test Id</strong>
+            <code id="last-test-id">-</code>
+          </div>
+          <div class="status-item">
+            <strong>Notification Id</strong>
+            <code id="last-notification-id">-</code>
+          </div>
+          <div class="status-item">
+            <strong>Clicked At</strong>
+            <span id="last-clicked-at">-</span>
+          </div>
+          <div class="status-item">
+            <strong>Click Path</strong>
+            <span id="last-click-path">-</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Predefined Test Cases</h2>
+        <div id="test-cases" class="case-list"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Log Panel</h2>
+        <div class="log-toolbar">
+          <p class="hint">
+            The page records local actions, notification payloads, and click results posted back
+            from the service worker.
+          </p>
+          <div class="inline-actions">
+            <button id="copy-logs-button" class="secondary" type="button">Copy Logs</button>
+            <button id="clear-logs-button" class="warn" type="button">Clear Logs</button>
+          </div>
+        </div>
+        <div id="log-panel" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
