@@ -237,19 +237,22 @@
         border-radius: 999px;
         font-size: 0.84rem;
         font-weight: 700;
-        border: 1px solid transparent;
+        border: 1px solid var(--border);
+        background: #ffffff;
+        color: var(--text);
       }
 
       .badge.bad {
-        background: #fee2e2;
         color: #991b1b;
-        border-color: #fecaca;
       }
 
       .badge.good {
-        background: #dcfce7;
         color: #166534;
-        border-color: #bbf7d0;
+      }
+
+      .badge-icon {
+        font-size: 0.95rem;
+        line-height: 1;
       }
 
       .log-toolbar {
@@ -319,17 +322,17 @@
           tapping the first visible button may reach the service worker as the second action id.
         </p>
         <p class="hint">
-          Repro: on Android, allow notifications, tap <code>Show test</code>, then tap the first
-          action button.
+          Repro: on Android, this can fail in the installed PWA or in the regular website. Allow
+          notifications, tap <code>Show test</code>, then tap the first action button.
         </p>
         <p class="hint">
           Bug confirmed: you tap button 1, but <code>Selected Action</code> or the log shows action
           2.
         </p>
         <div class="badge-row" aria-label="Current browser results">
-          <span class="badge bad">Broken: Chrome Android 146</span>
-          <span class="badge good">OK: Opera Android</span>
-          <span class="badge good">OK: Chrome/Edge Windows</span>
+          <span class="badge bad"><span class="badge-icon">✗</span> Chrome Android 146</span>
+          <span class="badge good"><span class="badge-icon">✓</span> Opera Android</span>
+          <span class="badge good"><span class="badge-icon">✓</span> Chrome/Edge Windows</span>
         </div>
         <p class="hint">
           Repo:
