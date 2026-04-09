@@ -82,6 +82,11 @@ const elements = {
   lastTestId: document.querySelector("#last-test-id"),
   lastNotificationId: document.querySelector("#last-notification-id"),
   lastClickedAt: document.querySelector("#last-clicked-at"),
+  clickToast: document.querySelector("#click-toast"),
+  toastCloseButton: document.querySelector("#toast-close-button"),
+  toastActionId: document.querySelector("#toast-action-id"),
+  toastActionTitle: document.querySelector("#toast-action-title"),
+  toastTestId: document.querySelector("#toast-test-id"),
   testCases: document.querySelector("#test-cases"),
   logPanel: document.querySelector("#log-panel"),
   customTitle: document.querySelector("#custom-title"),
@@ -204,6 +209,10 @@ function bindEvents() {
     });
   });
 
+  elements.toastCloseButton.addEventListener("click", () => {
+    hideClickToast();
+  });
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.addEventListener("message", (event) => {
       const payload = event.data;
@@ -218,6 +227,7 @@ function bindEvents() {
         ...payload.entry,
       });
       updateLastClickResult(payload.entry);
+      showClickToast(payload.entry);
     });
 
     navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -307,6 +317,20 @@ function appendLog(entry) {
 function updateLastClickResult(entry) {
   state.lastClickResult = entry;
   renderLastClickResult();
+}
+
+function showClickToast(entry) {
+  const selectedActionId = entry.selectedActionId || "(empty string)";
+  const matchedTitle = entry.selectedActionMeta?.title || "No matching action";
+
+  elements.toastActionId.textContent = selectedActionId;
+  elements.toastActionTitle.textContent = matchedTitle;
+  elements.toastTestId.textContent = entry.testId || "-";
+  elements.clickToast.hidden = false;
+}
+
+function hideClickToast() {
+  elements.clickToast.hidden = true;
 }
 
 function persistLogs() {

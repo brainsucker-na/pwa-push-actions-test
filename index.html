@@ -263,6 +263,56 @@
         margin-top: 12px;
       }
 
+      .toast {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        width: min(360px, calc(100% - 24px));
+        padding: 14px 14px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+        z-index: 20;
+      }
+
+      .toast[hidden] {
+        display: none;
+      }
+
+      .toast-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .toast-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+
+      .toast-close {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        padding: 6px 10px;
+        min-width: auto;
+      }
+
+      .toast-body {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+        color: var(--text);
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+
+      .toast-body code {
+        word-break: break-word;
+      }
+
       #log-panel {
         margin-top: 12px;
         min-height: 280px;
@@ -449,6 +499,20 @@
         <div id="log-panel" aria-live="polite"></div>
       </section>
     </main>
+
+    <aside id="click-toast" class="toast" hidden aria-live="polite" aria-atomic="true">
+      <div class="toast-header">
+        <div class="toast-title">Notification click received</div>
+        <button id="toast-close-button" class="toast-close" type="button" aria-label="Close">
+          Close
+        </button>
+      </div>
+      <div class="toast-body">
+        <div>Action id: <code id="toast-action-id">(empty string)</code></div>
+        <div>Action title: <span id="toast-action-title">Unknown</span></div>
+        <div>Test id: <code id="toast-test-id">-</code></div>
+      </div>
+    </aside>
 
     <script type="module" src="./app.js"></script>
   </body>
