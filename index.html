@@ -7,7 +7,7 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
-    <title>PWA Notification Action Tester</title>
+    <title>PWA Notification Actions Test App</title>
     <style>
       :root {
         color-scheme: light;
@@ -284,14 +284,14 @@
   <body>
     <main>
       <section class="hero stack">
-        <h1>PWA Notification Action Tester</h1>
+        <h1>PWA Notification Actions Test App</h1>
         <p>
-          This site reproduces an Android Chrome PWA bug: tap button 1 in a notification, but the
-          service worker will receive button 2 as <code>event.action</code>.
+          A small PWA for testing notification actions and checking what
+          <code>event.action</code> reaches the service worker.
         </p>
         <p class="hint">
-          On Android: install the PWA, allow notifications, run a test, then tap the same button in
-          the notification. Then check which <code>event.action</code> came back.
+          It is useful as a general test app, and it also helps reproduce the Android Chrome bug
+          where tapping button 1 can come through as button 2.
         </p>
         <p class="hint">
           Repo:

@@ -1,12 +1,16 @@
-# PWA Notification Action Tester
+# PWA Notification Actions Test App
 
-Tiny static website created to demonstrate a notification action bug in an installed Android Chrome PWA.
+Tiny static website for testing PWA notification actions and inspecting what `event.action` reaches the service worker.
 
-Observed bug being demonstrated:
+One concrete issue this app helps demonstrate:
+
+- on Android Chrome, whether used as an installed PWA or in a regular browser tab, tapping the first visible action button may return the second action id
+
+Observed Android Chrome bug:
 
 - the service worker defines notification `actions` correctly
 - Android Chrome shows those action buttons correctly
-- when the first visible button is tapped, `notificationclick` always delivers the second button's `event.action`
+- when the first visible button is tapped, `notificationclick` may deliver the second button's `event.action`
 - the same test flow behaves correctly in Chrome/Edge on Windows
 
 The app uses only local notifications. There is no backend, no push server, no Firebase, and no VAPID setup.
@@ -44,7 +48,7 @@ The app uses only local notifications. There is no backend, no push server, no F
 
 ## Update button
 
-Installed PWAs can keep serving cached app files. The `Update PWA` button exists so you can force the app to refresh itself from the current site version before testing again.
+Installed PWAs can keep serving cached app files. The `Update PWA` button exists so you can force the installed app to refresh itself from the current site version before testing again.
 
 When pressed, it:
 
@@ -91,7 +95,7 @@ Service workers and notifications require a secure context.
 ## Android Chrome test flow
 
 1. Open the site in Chrome on Android.
-2. Install it as a PWA from Chrome.
+2. Optional: install it as a PWA from Chrome if you also want to test installed mode.
 3. Tap `Register SW`.
 4. Tap `Allow Notifications`.
 5. Tap `Show test` on one of the predefined cases.
@@ -102,7 +106,7 @@ Service workers and notifications require a secure context.
 ## Expected demo outcome
 
 - On Chrome for Windows: the returned `event.action` should normally match the tapped button.
-- On the affected installed Android Chrome PWA: tapping the first visible action button may return the second action id instead.
+- On affected Android Chrome, in either installed PWA mode or a regular Chrome tab, tapping the first visible action button may return the second action id instead.
 
 ## Important implementation notes
 
