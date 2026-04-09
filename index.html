@@ -223,6 +223,35 @@
         color: var(--accent-strong);
       }
 
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+      }
+
+      .badge.bad {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fecaca;
+      }
+
+      .badge.good {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #bbf7d0;
+      }
+
       .log-toolbar {
         display: flex;
         justify-content: space-between;
@@ -286,13 +315,22 @@
       <section class="hero stack">
         <h1>PWA Notification Actions Test App</h1>
         <p>
-          A small PWA for testing notification actions and checking what
-          <code>event.action</code> reaches the service worker.
+          Android Chrome bug repro: the notification can show the correct action buttons, but
+          tapping the first visible button may reach the service worker as the second action id.
         </p>
         <p class="hint">
-          It is useful as a general test app, and it also helps reproduce the Android Chrome bug
-          where tapping button 1 can come through as button 2.
+          Repro: on Android, allow notifications, tap <code>Show test</code>, then tap the first
+          action button.
         </p>
+        <p class="hint">
+          Bug confirmed: you tap button 1, but <code>Selected Action</code> or the log shows action
+          2.
+        </p>
+        <div class="badge-row" aria-label="Current browser results">
+          <span class="badge bad">Broken: Chrome Android 146</span>
+          <span class="badge good">OK: Opera Android</span>
+          <span class="badge good">OK: Chrome/Edge Windows</span>
+        </div>
         <p class="hint">
           Repo:
           <a href="https://github.com/brainsucker-na/pwa-push-actions-test" target="_blank" rel="noreferrer">

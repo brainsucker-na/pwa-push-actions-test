@@ -4,14 +4,22 @@ Tiny static website for testing PWA notification actions and inspecting what `ev
 
 One concrete issue this app helps demonstrate:
 
-- on Android Chrome, whether used as an installed PWA or in a regular browser tab, tapping the first visible action button may return the second action id
+- on Chrome Android 146, whether used as an installed PWA or in a regular browser tab, tapping the first visible action button may return the second action id
 
 Observed Android Chrome bug:
 
 - the service worker defines notification `actions` correctly
 - Android Chrome shows those action buttons correctly
 - when the first visible button is tapped, `notificationclick` may deliver the second button's `event.action`
-- the same test flow behaves correctly in Chrome/Edge on Windows
+- the same test flow works correctly in Opera Android
+- the same test flow works correctly in Chrome/Edge on Windows
+
+Observed compatibility matrix:
+
+- Works incorrectly: Chrome Android 146
+- Works correctly: Opera Android
+- Works correctly: Chrome Windows
+- Works correctly: Edge Windows
 
 The app uses only local notifications. There is no backend, no push server, no Firebase, and no VAPID setup.
 
@@ -105,8 +113,9 @@ Service workers and notifications require a secure context.
 
 ## Expected demo outcome
 
-- On Chrome for Windows: the returned `event.action` should normally match the tapped button.
-- On affected Android Chrome, in either installed PWA mode or a regular Chrome tab, tapping the first visible action button may return the second action id instead.
+- On Chrome Android 146: tapping the first visible action button may return the second action id instead.
+- On Opera Android: the returned `event.action` should match the tapped button.
+- On Chrome/Edge for Windows: the returned `event.action` should match the tapped button.
 
 ## Important implementation notes
 
