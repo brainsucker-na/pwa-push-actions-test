@@ -1,4 +1,5 @@
 {
+  "id": "./",
   "name": "PWA Notification Action Tester",
   "short_name": "PWA Actions",
   "description": "Tiny installable PWA for testing Android Chrome notification action buttons and event.action values.",
